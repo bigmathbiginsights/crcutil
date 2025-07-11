@@ -50,7 +50,7 @@ CXX_VERSION=$($CXX --version | head -1)
 IS_CLANG=0
 echo $CXX_VERSION | grep -q "clang" && IS_CLANG=1
 KERNEL_NAME=$(uname -s)
-PROCESSOR=$(uname -p)
+PROCESSOR=$(uname -m)
 
 if [ ! -d m4 ]; then
   echo "Creating m4 directory"
@@ -89,8 +89,9 @@ crcutil_flags="-DCRCUTIL_USE_MM_CRC32=1 -Wall -Icode -Iexamples -Itests"
 crcutil_flags="${crcutil_flags} -O3"
 if [[ "$PROCESSOR" == "ppc64le" ]]; then
   crcutil_flags="${crcutil_flags}"
-elif [[ "$PROCESSOR" == "aarch64" ]]; then
+elif [[ "$PROCESSOR" == "aarch64" || "$PROCESSOR" == "arm64" ]]; then
   crcutil_flags="${crcutil_flags} -march=armv8-a"
+  crcutil_flags="${crcutil_flags} -DCRCUTIL_USE_MM_CRC32=0"
 elif [[ "$IS_CLANG" = "0" ]]; then
   # Newer GCC versions output just the major version with -dumpversion flag,
   # but older GCC versions don't even recognize the -dumpfullversion flag which
@@ -113,7 +114,9 @@ elif [[ "$IS_CLANG" = "0" ]]; then
     crcutil_flags="${crcutil_flags} -msse2 -mcrc32"
   fi
 elif [[ "$IS_CLANG" = "1" ]]; then
-  crcutil_flags="${crcutil_flags} -msse2 -msse4.2"
+  if [[ "$PROCESSOR" == "x86_64" || "$PROCESSOR" == "amd64" ]]; then
+    crcutil_flags="${crcutil_flags} -msse2 -msse4.2"
+  fi
 fi
 
 echo>>${target} "AM_CXXFLAGS=${crcutil_flags}"
