@@ -3,7 +3,7 @@
 # See http://mij.oltrelinux.com/devel/autoconf-automake/
 
 if [ -f "Makefile" ] && [ -f "Makefile.am" ] && [ -f "Makefile.in" ] && [ -d ".deps" ] ; then
-  make clean
+  make distclean || make clean
 fi
 
 echo "Removing old garbage"
@@ -160,7 +160,17 @@ echo "  ${crcutil_flags}"
 echo "You may now run ./configure && make && make install"
 echo ""
 
-exit 0
+# exit 0
 
-#./configure CXXFLAGS="${cflags}" CFLAGS="${cflags}"
-#make $1
+cflags="${CFLAGS} ${crcutil_flags}"
+cxxflags="${CXXFLAGS} ${crcutil_flags}"
+
+echo ""
+echo "./configure CXXFLAGS="${cxxflags}" CFLAGS="${cflags}" $1"
+echo ""
+
+./configure CXXFLAGS="${cxxflags}" CFLAGS="${cflags}" $1
+
+if [ -f "libtool" ]; then
+  sed -i '' '/-bind_at_load/d' libtool
+fi
